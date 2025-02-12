@@ -113,6 +113,9 @@ frappe.query_reports["Stock Balance With Barcode Scanning Feature"] = {
             label: __("Barcode"),
             fieldtype: "Data",
             width: "80",
+            onchange: function() {
+                // ...
+            },
         },
     ],
 
@@ -127,6 +130,38 @@ frappe.query_reports["Stock Balance With Barcode Scanning Feature"] = {
 
         return value;
     },
+
+    // إضافة وظيفة rendered
+    onload: function(query_report) {
+        setTimeout(() => {
+            // 1. تسجيل معلومات الحقول في وحدة التحكم
+            console.log("Fields Dictionary:", query_report.page.fields_dict);
+
+            // 2. التحقق من وجود الحقل قبل محاولة تفعيله
+            if (query_report.page.fields_dict && query_report.page.fields_dict["barcode"]) {
+                // 3. محاولة تفعيل الحقل باستخدام jQuery
+                try {
+                    query_report.page.fields_dict["barcode"].$input.focus();
+                } catch (e) {
+                    console.error("Error focusing with jQuery:", e);
+
+                    try {
+                        const barcodeField = document.querySelector('[data-fieldname="barcode"] input');
+                        if (barcodeField) {
+                            barcodeField.focus();
+                        } else {
+                            console.error("Barcode field not found with querySelector!");
+                        }
+                    } catch (e) {
+                        console.error("Error focusing with querySelector:", e);
+                    }
+                }
+            } else {
+                console.error("Barcode field not found in fields_dict!");
+            }
+        }, 1500); // زيادة التأخير إلى 1500 مللي ثانية
+    }
 };
 
-erpnext.utils.add_inventory_dimensions("Stock Balance", 8);
+// تمرير كائن التقرير إلى الدالة add_inventory_dimensions
+erpnext.utils.add_inventory_dimensions(frappe.query_reports["Stock Balance With Barcode Scanning Feature"], 8);
