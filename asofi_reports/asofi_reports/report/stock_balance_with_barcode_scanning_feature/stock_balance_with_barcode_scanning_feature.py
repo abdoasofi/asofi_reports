@@ -286,11 +286,14 @@ class StockBalanceReport:
     def prepare_stock_ledger_entries(self):
         sle = frappe.qb.DocType("Stock Ledger Entry")
         item_table = frappe.qb.DocType("Item")
+        item_barcode_table = frappe.qb.DocType("Item Barcode")  # Corrected doctype name
 
         query = (
             frappe.qb.from_(sle)
             .inner_join(item_table)
             .on(sle.item_code == item_table.name)
+            .left_join(item_barcode_table)  # Use LEFT JOIN
+            .on(item_table.name == item_barcode_table.parent)  # Join with parent
             .select(
                 sle.item_code,
                 sle.warehouse,
@@ -326,11 +329,9 @@ class StockBalanceReport:
         if self.filters.get("company"):
             query = query.where(sle.company == self.filters.get("company"))
 
-        # إضافة شرط تصفية الباركود
+        # Add barcode filter using the child table
         if self.filters.get("barcode"):
-            # يفترض هنا أن لديك حقل "barcode" في جدول "Item"
-            # يمكنك تعديل اسم الحقل إذا كان مختلفاً
-            query = query.where(item_table.barcode == self.filters.get("barcode"))
+            query = query.where(item_barcode_table.barcode == self.filters.get("barcode"))
 
         self.sle_query = query
 
